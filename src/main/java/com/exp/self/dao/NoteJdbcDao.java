@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Properties;
 
 @Component
+@Primary
 public class NoteJdbcDao implements NoteDao {
 
     private Connection connection;
@@ -63,7 +64,6 @@ public class NoteJdbcDao implements NoteDao {
     }
 
     private int findNextAvailableId() throws SQLException {
-        // Находим все существующие id
         List<Integer> existingIds = new ArrayList<>();
         try (Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery("SELECT id FROM notes ORDER BY id")) {
@@ -72,7 +72,6 @@ public class NoteJdbcDao implements NoteDao {
             }
         }
 
-        // Ищем первый пропуск
         int nextId = 1;
         for (int id : existingIds) {
             if (id == nextId) {
@@ -117,9 +116,9 @@ public class NoteJdbcDao implements NoteDao {
 
     @Override
     public void update(int index, String newText) {
-        try (PreparedStatement preparedStatement = connection.prepareStatement("UPDATE notes SET text = ? WHERE id = ?")) {
+        try (PreparedStatement preparedStatement = connection.prepareStatement("UPDATE notes SET text = ? WHERE id IN (SELECT id FROM notes LIMIT 1 OFFSET ?)")) {
             preparedStatement.setString(1, newText);
-            preparedStatement.setInt(2, index + 1);
+            preparedStatement.setInt(2, index);
             preparedStatement.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Failed to update note", e);
@@ -128,8 +127,9 @@ public class NoteJdbcDao implements NoteDao {
 
     @Override
     public void delete(int index) {
-        try (PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM notes WHERE id = ?")) {
-            preparedStatement.setInt(1, index + 1);
+
+        try (PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM notes WHERE id IN (SELECT id FROM notes LIMIT 1 OFFSET ?)")) {
+            preparedStatement.setInt(1, index);
             preparedStatement.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Failed to delete note", e);

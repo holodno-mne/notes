@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Component
-@Primary
 public class NoteFileDao implements NoteDao {
     private static final String FILE_NAME = "note.txt";
     private List<Note> notes = new ArrayList<>();
@@ -19,7 +18,7 @@ public class NoteFileDao implements NoteDao {
         loadNotesFromFile();
 
         if (notes.isEmpty()) {
-            notes.add(new Note("Это моя первая заметка"));
+            notes.add(new Note("Это моя первая заметка в файле"));
             saveNotesToFile();
         }
     }
