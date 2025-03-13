@@ -1,6 +1,7 @@
 package com.exp.self.dao;
 
 import com.exp.self.annotation.Component;
+import com.exp.self.annotation.Primary;
 import com.exp.self.model.Note;
 
 import java.io.*;
@@ -8,8 +9,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Component
+@Primary
 public class NoteFileDao implements NoteDao {
-    private static final String FILE_NAME = "E:\\Notes\\test.txt";
+    private static final String FILE_NAME = "note.txt";
     private List<Note> notes = new ArrayList<>();
 
     public NoteFileDao() {

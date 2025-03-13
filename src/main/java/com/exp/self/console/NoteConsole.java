@@ -1,17 +1,23 @@
 package com.exp.self.console;
 
+import com.exp.self.annotation.Component;
+import com.exp.self.annotation.Inject;
 import com.exp.self.model.Note;
 import com.exp.self.service.NoteService;
 
 import java.util.List;
 import java.util.Scanner;
 
+@Component
 public class NoteConsole {
-    private final NoteService noteService;
+
+    @Inject
+    private NoteService noteService;
+
     private final Scanner scanner;
 
-    public NoteConsole(NoteService noteService) {
-        this.noteService = noteService;
+
+    public NoteConsole() {
         this.scanner = new Scanner(System.in);
     }
 

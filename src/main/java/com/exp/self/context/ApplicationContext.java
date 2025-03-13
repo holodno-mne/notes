@@ -3,14 +3,18 @@ package com.exp.self.context;
 
 import com.exp.self.annotation.Component;
 import com.exp.self.annotation.Inject;
+import com.exp.self.annotation.Primary;
 
 import java.lang.reflect.AnnotatedType;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.util.*;
 
 
 public class ApplicationContext {
     private final Map<Class<?>, List<Object>> beans = new HashMap<>(); //хранилище бинов <Название, Объект>
+    private final Map<Class<?>, Object> primaryBeans = new HashMap<>();
+
 
     private static ApplicationContext instance;
 
@@ -58,11 +62,38 @@ public class ApplicationContext {
         }
 
         System.out.println("Create bean for class: " + clazz);
-        Object instance = clazz.getDeclaredConstructor().newInstance();
+
+        Constructor<?> constructor = null;
+        for (Constructor<?> c : clazz.getDeclaredConstructors()) {
+            if (c.isAnnotationPresent(Inject.class)) {
+                constructor = c;
+                break;
+            }
+        }
+
+        if (constructor == null) {
+            constructor = clazz.getDeclaredConstructor();
+        }
+
+        Class<?>[] parameterTypes = constructor.getParameterTypes();
+        Object[] parameters = new Object[parameterTypes.length];
+        for (int i = 0; i < parameterTypes.length; i++) {
+            parameters[i] = getBean(parameterTypes[i]);
+        }
+
+        Object instance = constructor.newInstance(parameters);
 
         List<Object> list = new ArrayList<>();
         list.add(instance);
         beans.put(clazz, list);
+
+
+        if (clazz.isAnnotationPresent(Primary.class)) {
+            for (AnnotatedType clazz2 : clazz.getAnnotatedInterfaces()) {
+                Class<?> classOfInterface = (Class<?>) clazz2.getType();
+                primaryBeans.put(classOfInterface, instance);
+            }
+        }
 
         for (AnnotatedType clazz2 : clazz.getAnnotatedInterfaces()) {
             Class<?> classOfInterface = (Class<?>) clazz2.getType();
@@ -78,11 +109,16 @@ public class ApplicationContext {
 
 
     public <T> T getBean(Class<T> clazz) {
-
-        if (beans.containsKey(clazz) && beans.get(clazz).size() > 1) {
-            throw new RuntimeException("Multiple beans found for class: " + clazz);
+        if (primaryBeans.containsKey(clazz)) {
+            return (T) primaryBeans.get(clazz);
         }
-        return (T) beans.get(clazz).get(0);
+
+        if (beans.containsKey(clazz) && beans.get(clazz).size() > 0) {
+            return (T) beans.get(clazz).get(0);
+
+        }
+        throw new RuntimeException("No bean found for class: " + clazz);
+
     }
 }
 
