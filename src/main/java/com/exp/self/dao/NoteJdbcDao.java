@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Properties;
 
 @Component
-@Primary
 public class NoteJdbcDao implements NoteDao {
 
     private Connection connection;

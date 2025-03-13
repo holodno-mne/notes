@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Component
+@Primary
 public class NoteFileDao implements NoteDao {
     private static final String FILE_NAME = "note.txt";
     private List<Note> notes = new ArrayList<>();
